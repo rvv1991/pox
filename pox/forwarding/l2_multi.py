@@ -449,14 +449,22 @@ class l2_multi (EventMixin):
       if sw1 in adjacency[sw2]: del adjacency[sw2][sw1]
 
       # But maybe there's another way to connect these...
-      for ll in core.openflow_discovery.adjacency:
-        if ll.dpid1 == l.dpid1 and ll.dpid2 == l.dpid2:
+      for ll1 and ll2 in core.openflow_discovery.adjacency:
+        if ll1.dpid1 == l.dpid1 and ll1.dpid2 == l.dpid2:
           if flip(ll) in core.openflow_discovery.adjacency:
             # Yup, link goes both ways
             adjacency[sw1][sw2] = ll.port1
             adjacency[sw2][sw1] = ll.port2
             # Fixed -- new link chosen to connect these
             break
+        else if ll1.dpid1 == l.dpid1 and ll2.dpid2 ==l.dpid2 and ll1.dpid2 == ll2.dpid1:
+          if flip(ll1) and flip(ll2) in core.openflow_discovery.adjacency:
+            sw3 = switches[ll1.dpid2]
+            adjacency[sw1][sw3] = ll1.port1
+            adjacency[sw3][sw1] = ll1.port2
+            adjacency[sw3][sw2] = ll2.port1
+            adjacency[sw2][sw3] = ll2.port2
+            
     else:
       # If we already consider these nodes connected, we can
       # ignore this link up.
