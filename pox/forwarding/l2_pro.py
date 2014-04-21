@@ -184,10 +184,14 @@ class LearningSwitch (object):
     l = event.link
     sw1 = switches[l.dpid1]
     sw2 = switches[l.dpid2]
-    
+    sw3 = Switch()
     if event.removed:
       if sw2 in adjacency[sw1]: del adjacency[sw1][sw2]
       if sw1 in adjacency[sw2]: del adjacency[sw2][sw1]
+      
+      for sw3 in adjacency[sw1]:
+        if sw3 in adjacency[sw2]:
+          
     else:
       if adjacency[sw1][sw2] is None:
         if flip(l) in core.openflow_discovery.adjacency:
