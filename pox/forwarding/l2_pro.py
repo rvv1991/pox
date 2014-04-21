@@ -24,6 +24,7 @@ from pox.core import core
 import pox.openflow.libopenflow_01 as of
 from pox.lib.util import dpid_to_str
 from pox.lib.util import str_to_bool
+from pox.openflow.discovery import Discovery
 import time
 
 log = core.getLogger()
@@ -31,6 +32,9 @@ log = core.getLogger()
 # We don't want to flood immediately when a switch connects.
 # Can be overriden on commandline.
 _flood_delay = 0
+
+# Switches we know of.  [dpid] -> Switch
+switches = {}
 
 class LearningSwitch (object):
   """
@@ -172,6 +176,35 @@ class LearningSwitch (object):
         msg.actions.append(of.ofp_action_output(port = port))
         msg.data = event.ofp # 6a
         self.connection.send(msg)
+        
+  def _handle_openflow_discovery_LinkEvent (self, event):
+    def flip (link):
+      return Discovery.Link(link[2],link[3], link[0],link[1])
+      
+    l = event.link
+    sw1 = switches[l.dpid1]
+    sw2 = switches[l.dpid2]
+    
+    if event.removed:
+      if sw2 in adjacency[sw1]: del adjacency[sw1][sw2]
+      if sw1 in adjacency[sw2]: del adjacency[sw2][sw1]
+    else:
+      if adjacency[sw1][sw2] is None:
+        if flip(l) in core.openflow_discovery.adjacency:
+          # Yup, link goes both ways -- connected!
+          adjacency[sw1][sw2] = l.port1
+          adjacency[sw2][sw1] = l.port2
+      
+  def _handle_openflow_ConnectionUp (self, event):
+    sw = switches.get(event.dpid)
+    if sw is None:
+      # New switch
+      sw = Switch()
+      switches[event.dpid] = sw
+      sw.connect(event.connection)
+    else:
+      sw.connect(event.connection)
+    
 
 
 class l2_learning (object):
