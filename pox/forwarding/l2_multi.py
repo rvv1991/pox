@@ -13,18 +13,7 @@
 # limitations under the License.
 
 """
-A shortest-path forwarding application.
 
-This is a standalone L2 switch that learns ethernet addresses
-across the entire network and picks short paths between them.
-
-You shouldn't really write an application this way -- you should
-keep more state in the controller (that is, your flow tables),
-and/or you should make your topology more static.  However, this
-does (mostly) work. :)
-
-Depends on openflow.discovery
-Works with openflow.spanning_tree
 """
 
 from pox.core import core
